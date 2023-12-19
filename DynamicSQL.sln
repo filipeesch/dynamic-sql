@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicSQL", "DynamicSQL\DynamicSQL.csproj", "{D84BB367-B57A-4FE5-9B6B-3582B802E16F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DynamicSQL.Sample", "DynamicSQL.Sample\DynamicSQL.Sample.csproj", "{89733AAA-8052-4BA4-8C1D-8277DD55B763}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D84BB367-B57A-4FE5-9B6B-3582B802E16F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D84BB367-B57A-4FE5-9B6B-3582B802E16F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D84BB367-B57A-4FE5-9B6B-3582B802E16F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D84BB367-B57A-4FE5-9B6B-3582B802E16F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{89733AAA-8052-4BA4-8C1D-8277DD55B763}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{89733AAA-8052-4BA4-8C1D-8277DD55B763}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{89733AAA-8052-4BA4-8C1D-8277DD55B763}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{89733AAA-8052-4BA4-8C1D-8277DD55B763}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
