@@ -1,0 +1,36 @@
+name: Build
+
+on:
+  pull_request:
+
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: GITHUB CONTEXT
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Build Library
+        run: dotnet build DynamicSQL.sln -c Release
+
+#      - name: UnitTest
+#        run: |
+#          dotnet test DynamicSQL.UnitTests.csproj -c Release --logger "console;verbosity=detailed"
