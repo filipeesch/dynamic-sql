@@ -6,6 +6,16 @@
         <Nullable>enable</Nullable>
         <PackageId>DynamicSQL</PackageId>
         <Description>A .NET library designed to create complex, parameterized SQL queries dynamically using a versatile template syntax. Effortlessly handle conditional logic, integrate variable lists, and generate optimized SQL statements with ease. Ideal for applications requiring flexible SQL construction with maximum code safety and readability.</Description>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <Authors>Filipe Esch</Authors>
+        <Product>DynamicSQL</Product>
+        <PackageProjectUrl>https://github.com/filipeesch/dynamic-sql</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/filipeesch/dynamic-sql</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <license>https://github.com/filipeesch/dynamic-sql/LICENSE</license>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageTags>sql</PackageTags>
     </PropertyGroup>
 
 </Project>
