@@ -12,7 +12,7 @@ var query = new DynamicQuery(
          << {includeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
          FROM Person p
          WHERE 1=1
-             << {birthDate} ? AND p.BirthDate = {birthDate} >>
+             << {birthDate} ? AND p.BirthDate = {birthDate} <<  >>>>
              << {peopleIds} ? AND p.Id IN {peopleIds} >>
      """);
 
