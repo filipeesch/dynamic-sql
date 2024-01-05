@@ -2,12 +2,12 @@ namespace DynamicSQL.Parser;
 
 using System.Collections.Generic;
 
-public class ConditionalNode : IParsedSqlNode
+public class ConditionalNode : IParsedStatementNode
 {
     public ConditionalNode(
         int conditionValueIndex,
-        IReadOnlyCollection<IParsedSqlNode> truePartNodes,
-        IReadOnlyCollection<IParsedSqlNode> falsePartNodes)
+        IReadOnlyCollection<IParsedStatementNode> truePartNodes,
+        IReadOnlyCollection<IParsedStatementNode> falsePartNodes)
     {
         ConditionValueIndex = conditionValueIndex;
         TruePartNodes = truePartNodes;
@@ -16,7 +16,7 @@ public class ConditionalNode : IParsedSqlNode
 
     public int ConditionValueIndex { get; }
 
-    public IReadOnlyCollection<IParsedSqlNode> TruePartNodes { get; }
+    public IReadOnlyCollection<IParsedStatementNode> TruePartNodes { get; }
 
-    public IReadOnlyCollection<IParsedSqlNode> FalsePartNodes { get; }
+    public IReadOnlyCollection<IParsedStatementNode> FalsePartNodes { get; }
 }
