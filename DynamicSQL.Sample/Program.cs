@@ -1,5 +1,5 @@
-﻿using System.Data.SqlClient;
-using DynamicSQL;
+﻿using DynamicSQL;
+using Microsoft.Data.SqlClient;
 
 DateOnly? birthDate = new DateOnly(1989, 3, 12);
 int[] peopleIds = { 1, 2, 3, 4 };

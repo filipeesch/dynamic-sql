@@ -3,9 +3,9 @@ using Xunit;
 namespace DynamicSQL.Tests;
 
 using System;
-using System.Data.SqlClient;
 using DynamicSQL.Compiler;
 using DynamicSQL.Parser;
+using Microsoft.Data.SqlClient;
 
 public class UnitTest1
 {
