@@ -39,7 +39,7 @@ public class UnitTest1
                      WHERE
                          p.Id = {input.Day}
                          << {input.Month} ? AND p.BirthDate >= {4} << {5} ? Test1 AND << {6} ? Test2 >>>>>>
-                         << {2} ? AND p.Id IN {3} >>
+                         << {2} ? AND p.Id = {3} >>
                          AND p.ParentId IN {new[] { input.Year, input.Month, input.Day }}
                  """);
 

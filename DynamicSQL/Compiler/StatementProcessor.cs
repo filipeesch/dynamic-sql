@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using DynamicSQL.Parser;
 
-public class StatementRenderer(StringBuilder builder, DbCommand command, object[] values)
+public class StatementProcessor(StringBuilder builder, DbCommand command, object[] values) : IStatementProcessor
 {
     public void RenderCodeNode(CodeNode node) => builder.Append(node.Code);
 
@@ -64,5 +64,17 @@ public class StatementRenderer(StringBuilder builder, DbCommand command, object[
 
             command.Parameters.Add(parameter);
         }
+    }
+
+    public bool ConditionValueTest(int conditionValueIndex)
+    {
+        return values[conditionValueIndex] switch
+        {
+            null => false,
+            bool boolValue => boolValue,
+            ICollection collection => collection.Count > 0,
+            IEnumerable enumerable => enumerable.Cast<object>().Any(),
+            _ => true
+        };
     }
 }

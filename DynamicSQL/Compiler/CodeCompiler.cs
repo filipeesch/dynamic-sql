@@ -2,60 +2,72 @@ namespace DynamicSQL.Compiler;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using DynamicSQL.Parser;
 
 public class CodeCompiler(ParsedStatement parsed)
 {
-    private static readonly MethodInfo RenderCodeNodeMethod = typeof(StatementRenderer)
-        .GetMethod(nameof(StatementRenderer.RenderCodeNode))!;
+    private static readonly MethodInfo RenderCodeNodeMethod = typeof(IStatementProcessor)
+        .GetMethod(nameof(IStatementProcessor.RenderCodeNode))!;
 
-    private static readonly MethodInfo RenderParameterNodeMethod = typeof(StatementRenderer)
-        .GetMethod(nameof(StatementRenderer.RenderParameterNode))!;
+    private static readonly MethodInfo RenderParameterNodeMethod = typeof(IStatementProcessor)
+        .GetMethod(nameof(IStatementProcessor.RenderParameterNode))!;
 
-    public Action<StatementRenderer> Compile()
+    private static readonly MethodInfo ConditionValueTestMethod = typeof(IStatementProcessor)
+        .GetMethod(nameof(IStatementProcessor.ConditionValueTest))!;
+
+    public Action<IStatementProcessor> Compile()
     {
-        var expressions = new List<Expression>();
+        var processor = Expression.Parameter(typeof(IStatementProcessor), "processor");
 
-        var renderer = Expression.Parameter(typeof(StatementRenderer), "renderer");
+        var expression = GenerateNodesCode(parsed.Nodes, processor);
 
-        GenerateNodesCode(parsed.Nodes, expressions, renderer);
-
-        var lambda = Expression.Lambda<Action<StatementRenderer>>(Expression.Block(expressions), renderer);
+        var lambda = Expression.Lambda<Action<IStatementProcessor>>(expression, processor);
 
         return lambda.Compile();
     }
 
-    private void GenerateNodesCode(
-        IReadOnlyCollection<IParsedStatementNode> nodes,
-        ICollection<Expression> expressions,
-        ParameterExpression renderer)
+    private Expression GenerateNodesCode(
+        IEnumerable<IParsedStatementNode> nodes,
+        Expression processor)
     {
-        foreach (var node in nodes)
-        {
-            expressions.Add(
-                node switch
-                {
-                    CodeNode codeNode => GenerateCodeNode(codeNode, renderer),
-                    ParameterNode parameterNode =>
-                        GenerateParameterNode(parameterNode, renderer),
-                    ConditionalNode conditionalNode =>
-                        GenerateConditionalNode(conditionalNode, renderer),
-                    _ => throw new InvalidOperationException()
-                });
-        }
+        return Expression.Block(
+            nodes.Select(
+                node =>
+                    node switch
+                    {
+                        CodeNode codeNode => GenerateCodeNode(codeNode, processor),
+                        ParameterNode parameterNode =>
+                            GenerateParameterNode(parameterNode, processor),
+                        ConditionalNode conditionalNode =>
+                            GenerateConditionalNode(conditionalNode, processor),
+                        _ => throw new InvalidOperationException()
+                    }));
     }
 
-    private Expression GenerateConditionalNode(ConditionalNode conditionalNode, Expression renderer)
+    private Expression GenerateConditionalNode(ConditionalNode conditionalNode, Expression processor)
     {
-        //var @if = Expression.IfThen()
-        return Expression.Empty();
+        var testMethodCall = Expression.Call(
+            processor,
+            ConditionValueTestMethod,
+            Expression.Constant(conditionalNode.ConditionValueIndex));
+
+        var trueExpression = GenerateNodesCode(conditionalNode.TruePartNodes, processor);
+
+        var falseExpression = conditionalNode.FalsePartNodes.Count == 0 ?
+            null :
+            GenerateNodesCode(conditionalNode.FalsePartNodes, processor);
+
+        return falseExpression is null ?
+            Expression.IfThen(testMethodCall, trueExpression) :
+            Expression.IfThenElse(testMethodCall, trueExpression, falseExpression);
     }
 
-    private Expression GenerateParameterNode(ParameterNode parameterNode, Expression renderer) =>
-        Expression.Call(renderer, RenderParameterNodeMethod, Expression.Constant(parameterNode));
+    private Expression GenerateParameterNode(ParameterNode parameterNode, Expression processor) =>
+        Expression.Call(processor, RenderParameterNodeMethod, Expression.Constant(parameterNode));
 
-    private Expression GenerateCodeNode(CodeNode codeNode, Expression renderer) =>
-        Expression.Call(renderer, RenderCodeNodeMethod, Expression.Constant(codeNode));
+    private Expression GenerateCodeNode(CodeNode codeNode, Expression processor) =>
+        Expression.Call(processor, RenderCodeNodeMethod, Expression.Constant(codeNode));
 }
