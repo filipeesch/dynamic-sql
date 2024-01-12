@@ -60,7 +60,7 @@ public class StatementParser
         {
             if (lastIndex < match.Index)
             {
-                nodes.Add(new CodeNode(part.Substring(lastIndex, match.Index - lastIndex)));
+                nodes.Add(new SqlExpressionNode(part.Substring(lastIndex, match.Index - lastIndex)));
             }
 
             nodes.Add(
@@ -73,7 +73,7 @@ public class StatementParser
 
         if (lastIndex < part.Length)
         {
-            nodes.Add(new CodeNode(part.Substring(lastIndex, part.Length - lastIndex)));
+            nodes.Add(new SqlExpressionNode(part.Substring(lastIndex, part.Length - lastIndex)));
         }
 
         return nodes;
@@ -81,9 +81,9 @@ public class StatementParser
 
     private static ConditionalNode CreateConditionalNode(Match match)
     {
-        var conditionValueIndex = int.Parse(match.Groups[1].Value);
-        var truePart = match.Groups[2].Value;
-        var falsePart = match.Groups[3].Value;
+        var conditionValueIndex = int.Parse(match.Groups["index"].Value);
+        var truePart = match.Groups["true"].Value;
+        var falsePart = match.Groups["false"].Value;
 
         var truePartNodes = ParsePart(truePart);
         var falsePartNodes = falsePart == string.Empty ?

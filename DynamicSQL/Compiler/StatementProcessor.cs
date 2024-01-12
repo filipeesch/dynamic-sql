@@ -9,7 +9,7 @@ using DynamicSQL.Parser;
 
 public class StatementProcessor(StringBuilder builder, DbCommand command, object[] values) : IStatementProcessor
 {
-    public void RenderCodeNode(CodeNode node) => builder.Append(node.Code);
+    public void RenderCodeNode(SqlExpressionNode node) => builder.Append(node.Expression);
 
     public void RenderParameterNode(ParameterNode node)
     {

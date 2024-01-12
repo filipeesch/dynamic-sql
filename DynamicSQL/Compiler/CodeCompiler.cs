@@ -38,7 +38,7 @@ public class CodeCompiler(ParsedStatement parsed)
                 node =>
                     node switch
                     {
-                        CodeNode codeNode => GenerateCodeNode(codeNode, processor),
+                        SqlExpressionNode codeNode => GenerateCodeNode(codeNode, processor),
                         ParameterNode parameterNode =>
                             GenerateParameterNode(parameterNode, processor),
                         ConditionalNode conditionalNode =>
@@ -68,6 +68,6 @@ public class CodeCompiler(ParsedStatement parsed)
     private Expression GenerateParameterNode(ParameterNode parameterNode, Expression processor) =>
         Expression.Call(processor, RenderParameterNodeMethod, Expression.Constant(parameterNode));
 
-    private Expression GenerateCodeNode(CodeNode codeNode, Expression processor) =>
+    private Expression GenerateCodeNode(SqlExpressionNode codeNode, Expression processor) =>
         Expression.Call(processor, RenderCodeNodeMethod, Expression.Constant(codeNode));
 }

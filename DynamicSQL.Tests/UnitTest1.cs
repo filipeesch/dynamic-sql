@@ -17,12 +17,65 @@ public class UnitTest1
         var parsed = parser.Parse(
             """
             SELECT
-                p.Name
-                << {0} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
-                FROM Person p
-                WHERE 1=1
-                    << {1} ? AND p.BirthDate >= {4} << {5} ? Test1 AND << {6} ? Test2 >>>>>>
-                    << {2} ? AND p.Id IN {3} >>
+            p.Name
+            FROM Person p
+            WHERE
+                <<
+                   {2}
+                   ? AND p.BirthDate >= {3}
+                       <<
+                           {4}
+                           ? Test1_True
+                               <<
+                                   {5}
+                                   ? Test11_True
+                                   : Test11_False
+                               >>
+                           : Test1_False
+                               <<
+                                   {6}
+                                   ? Test2_True
+                                   : Test2_False
+                               >>
+                       >>
+                >>
+                << {7} ? AND p.Id = {8} >>
+                AND p.ParentId IN {9}
+            """);
+    }
+
+    [Fact]
+    public void Test11()
+    {
+        var parser = new StatementParserV2();
+
+        parser.Parse(
+            """
+            SELECT
+            p.Name
+            FROM Person p
+            WHERE
+                <<
+                   {2}
+                   ? AND p.BirthDate >= {3}
+                       <<
+                           {4}
+                           ? Test1_True
+                               <<
+                                   {5}
+                                   ? Test11_True
+                                   : Test11_False
+                               >>
+                           : Test1_False
+                               <<
+                                   {6}
+                                   ? Test2_True
+                                   : Test2_False
+                               >>
+                       >>
+                >>
+                << {7} ? AND p.Id = {8} >>
+                AND p.ParentId IN {9}
             """);
     }
 
@@ -38,7 +91,25 @@ public class UnitTest1
                      FROM Person p
                      WHERE
                          p.Id = {input.Day}
-                         << {input.Month} ? AND p.BirthDate >= {4} << {5} ? Test1 AND << {6} ? Test2 >>>>>>
+                         <<
+                            {input.Month}
+                            ? AND p.BirthDate >= {4}
+                                <<
+                                    {true}
+                                    ? Test1_True
+                                        <<
+                                            {false}
+                                            ? Test11_True
+                                            : Test11_False
+                                        >>
+                                    : Test1_False
+                                        <<
+                                            {false}
+                                            ? Test2_True
+                                            : Test2_False
+                                        >>
+                                >>
+                         >>
                          << {2} ? AND p.Id = {3} >>
                          AND p.ParentId IN {new[] { input.Year, input.Month, input.Day }}
                  """);

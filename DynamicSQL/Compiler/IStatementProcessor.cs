@@ -4,7 +4,7 @@ using DynamicSQL.Parser;
 
 public interface IStatementProcessor
 {
-    void RenderCodeNode(CodeNode node);
+    void RenderCodeNode(SqlExpressionNode node);
 
     void RenderParameterNode(ParameterNode node);
 
