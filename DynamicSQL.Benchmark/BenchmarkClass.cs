@@ -21,7 +21,7 @@ public class BenchmarkClass
                  << {i.IncludeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
                  FROM Person p
                  WHERE 1=1
-                     << {i.BirthDate} ? AND p.BirthDate = {i.BirthDate} <<  >>>>
+                     << {i.BirthDate} ? AND p.BirthDate = {i.BirthDate} >>
                      << {i.PeopleIds} ? AND p.Id IN {i.PeopleIds} >>
              """);
 
@@ -35,7 +35,7 @@ public class BenchmarkClass
                  << {input.IncludeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
                  FROM Person p
                  WHERE 1=1
-                     << {input.BirthDate} ? AND p.BirthDate = {input.BirthDate} <<  >>>>
+                     << {input.BirthDate} ? AND p.BirthDate = {input.BirthDate} >>
                      << {input.PeopleIds} ? AND p.Id IN {input.PeopleIds} >>
              """);
 

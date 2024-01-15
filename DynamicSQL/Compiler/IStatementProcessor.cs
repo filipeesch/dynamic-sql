@@ -1,12 +1,14 @@
 namespace DynamicSQL.Compiler;
 
-using DynamicSQL.Parser;
+using DynamicSQL.Parser.Expressions;
 
-public interface IStatementProcessor
+internal interface IStatementProcessor
 {
-    void RenderCodeNode(SqlExpressionNode node);
+    void RenderTextExpression(TextExpression expression);
 
-    void RenderParameterNode(ParameterNode node);
+    void RenderParameterExpression(ParameterExpression expression);
+
+    void RenderInArrayExpression(InArrayExpression expression);
 
     bool ConditionValueTest(int conditionValueIndex);
 }

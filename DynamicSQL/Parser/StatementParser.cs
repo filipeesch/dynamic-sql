@@ -1,95 +1,47 @@
 namespace DynamicSQL.Parser;
 
-using System;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
+using System.Linq;
+using DynamicSQL.Extensions;
+using DynamicSQL.Parser.Expressions;
 
 public class StatementParser
 {
     public ParsedStatement Parse(string template)
     {
-        var nodes = ParsePart(template);
+        var stack = new ExpressionStack();
 
-        return new ParsedStatement(nodes);
+        ParseInternal(template, stack);
+
+        return new ParsedStatement(
+            stack
+                .Reverse()
+                .ToList());
     }
 
-    private static IReadOnlyCollection<IParsedStatementNode> ParsePart(string part)
+    private void ParseInternal(string template, ExpressionStack stack)
     {
-        var matches = RegexDefinitions.TemplateTag.Matches(part);
+        var index = 0;
 
-        var lastIndex = 0;
-
-        var nodes = new List<IParsedStatementNode>();
-
-        foreach (Match match in matches)
+        foreach (var token in template.Tokenize())
         {
-            if (lastIndex < match.Index)
-            {
-                nodes.AddRange(CreateOffTagsNodes(part.Substring(lastIndex, match.Index - lastIndex)));
-            }
+            TryStackTextExpression(template, stack, index, token.StartIndex - index);
 
-            var group = match.Groups[1].Value;
-
-            var conditionalOperatorMatch = RegexDefinitions.ConditionalOperator.Match(group);
-
-            if (conditionalOperatorMatch.Success)
-            {
-                nodes.Add(CreateConditionalNode(conditionalOperatorMatch));
-            }
-
-            lastIndex = match.Index + match.Length;
+            index = token.EndIndex + 1;
+            stack.Push(token);
         }
 
-        if (lastIndex < part.Length)
-        {
-            nodes.AddRange(CreateOffTagsNodes(part.Substring(lastIndex, part.Length - lastIndex)));
-        }
-
-        return nodes;
+        TryStackTextExpression(template, stack, index, template.Length - index);
     }
 
-    private static IEnumerable<IParsedStatementNode> CreateOffTagsNodes(string part)
+    private static void TryStackTextExpression(string template, ExpressionStack stack, int index, int length)
     {
-        var matches = RegexDefinitions.Parameters.Matches(part);
+        var text = template
+            .Substring(index, length)
+            .Trim(' ', '\n', '\r');
 
-        var lastIndex = 0;
-
-        var nodes = new List<IParsedStatementNode>();
-
-        foreach (Match match in matches)
+        if (!string.IsNullOrEmpty(text))
         {
-            if (lastIndex < match.Index)
-            {
-                nodes.Add(new SqlExpressionNode(part.Substring(lastIndex, match.Index - lastIndex)));
-            }
-
-            nodes.Add(
-                new ParameterNode(
-                    match.Groups[1].Value,
-                    int.Parse(match.Groups[2].Value)));
-
-            lastIndex = match.Index + match.Length;
+            stack.Push(new TextExpression(text));
         }
-
-        if (lastIndex < part.Length)
-        {
-            nodes.Add(new SqlExpressionNode(part.Substring(lastIndex, part.Length - lastIndex)));
-        }
-
-        return nodes;
-    }
-
-    private static ConditionalNode CreateConditionalNode(Match match)
-    {
-        var conditionValueIndex = int.Parse(match.Groups["index"].Value);
-        var truePart = match.Groups["true"].Value;
-        var falsePart = match.Groups["false"].Value;
-
-        var truePartNodes = ParsePart(truePart);
-        var falsePartNodes = falsePart == string.Empty ?
-            Array.Empty<IParsedStatementNode>() :
-            ParsePart(falsePart);
-
-        return new ConditionalNode(conditionValueIndex, truePartNodes, falsePartNodes);
     }
 }

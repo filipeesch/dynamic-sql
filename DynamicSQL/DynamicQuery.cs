@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace DynamicSQL;
 
+[Obsolete("Use StatementCompiler class instead")]
 public class DynamicQuery
 {
     private static readonly Regex QueryPartRegex = new(

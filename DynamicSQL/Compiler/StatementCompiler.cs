@@ -4,7 +4,7 @@ using System;
 using System.Linq.Expressions;
 using DynamicSQL.Parser;
 
-public class StatementCompiler
+public static class StatementCompiler
 {
     public static CompiledStatement<TInput> Compile<TInput>(Expression<Func<TInput, FormattableString>> exp)
     {

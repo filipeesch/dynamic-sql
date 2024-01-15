@@ -1,8 +1,9 @@
 namespace DynamicSQL.Parser;
 
 using System.Collections.Generic;
+using DynamicSQL.Parser.Expressions;
 
-public class ParsedStatement(IReadOnlyCollection<IParsedStatementNode> nodes)
+public class ParsedStatement(IReadOnlyCollection<IParsedExpression> expressions)
 {
-    public IReadOnlyCollection<IParsedStatementNode> Nodes { get; } = nodes;
+    public IReadOnlyCollection<IParsedExpression> Expressions { get; } = expressions;
 }

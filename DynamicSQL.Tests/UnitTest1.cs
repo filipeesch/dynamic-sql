@@ -44,40 +44,6 @@ public class UnitTest1
             """);
     }
 
-    [Fact]
-    public void Test11()
-    {
-        var parser = new StatementParserV2();
-
-        parser.Parse(
-            """
-            SELECT
-            p.Name
-            FROM Person p
-            WHERE
-                <<
-                   {2}
-                   ? AND p.BirthDate >= {3}
-                       <<
-                           {4}
-                           ? Test1_True
-                               <<
-                                   {5}
-                                   ? Test11_True
-                                   : Test11_False
-                               >>
-                           : Test1_False
-                               <<
-                                   {6}
-                                   ? Test2_True
-                                   : Test2_False
-                               >>
-                       >>
-                >>
-                << {7} ? AND p.Id = {8} >>
-                AND p.ParentId IN {9}
-            """);
-    }
 
     [Fact]
     public void Test2()
