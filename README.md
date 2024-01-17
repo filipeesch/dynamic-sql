@@ -5,7 +5,7 @@ SQL is a powerful and flexible language for querying and updating data. However,
 The library leverages `<< >>` tags combined with string interpolation and custom operators to construct the final SQL string. The interpolated string is interpreted and compiled to native code, to provide the best performance in runtime.
 
 ### Conditional Rendering
-The syntax `<<condition ? truePart : falsePart>>` acts as an IF statement for conditional rendering. The false part is optional. Conditions can be boolean, nullable, or list types, with 'true' interpreted as a boolean true, a non-null nullable type, or a non-empty list. Nested conditions is supported.
+The syntax `<<condition ? truePart : falsePart>>` acts as an IF statement for conditional rendering. The false part is optional. Conditions can be boolean, nullable, or list types, with 'true' interpreted as a boolean true, a non-null nullable type, or a non-empty list. Nested conditions are supported.
 
 ### Automatic Parameters
 String interpolation placeholders are automatically converted into SQL parameters. Lists used with the `IN` SQL operator are transformed into multiple SQL parameters.
@@ -44,6 +44,7 @@ WHERE 1=1
 ```
 
 ## Future Enhancements
+- Unit Tests
 - Loop rendering support
 - Better syntax error messages 
 - Adding support for table-valued parameters.

@@ -1,11 +1,10 @@
-using Xunit;
-
-namespace DynamicSQL.Tests;
-
 using System;
 using DynamicSQL.Compiler;
 using DynamicSQL.Parser;
 using Microsoft.Data.SqlClient;
+using Xunit;
+
+namespace DynamicSQL.Tests;
 
 public class UnitTest1
 {
@@ -43,7 +42,6 @@ public class UnitTest1
                 AND p.ParentId IN {9}
             """);
     }
-
 
     [Fact]
     public void Test2()

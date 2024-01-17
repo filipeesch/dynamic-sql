@@ -5,8 +5,8 @@ var statement = StatementCompiler.Compile<QueryInput>(
     i =>
         $"""
          SELECT
-             p.Name
-             << {i.IncludeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
+             p.Name,
+             << {i.IncludeAddresses} ? (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
              FROM Person p
              WHERE 1=1
                  << {i.BirthDate} ? AND p.BirthDate = {i.BirthDate} >>
