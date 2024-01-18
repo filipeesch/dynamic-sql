@@ -53,6 +53,7 @@ public class UnitTest1
                      p.Name
                      << {input.Day} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
                      FROM Person p
+                        INNER JOIN Test t
                      WHERE
                          p.Id = {input.Day}
                          <<
