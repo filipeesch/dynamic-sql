@@ -1,54 +1,66 @@
 namespace DynamicSQL.Benchmark;
 
 using BenchmarkDotNet.Attributes;
+using Dapper;
 using DynamicSQL.Compiler;
-using Microsoft.Data.SqlClient;
+using Microsoft.Data.Sqlite;
 
 [SimpleJob]
 [MemoryDiagnoser]
 public class BenchmarkClass
 {
-    QueryInput input = new QueryInput(
-        new DateOnly(1989, 3, 12),
-        new[] { 1, 2, 3, 4 },
-        true);
-
-    CompiledStatement<QueryInput> compiledStatement = StatementCompiler.Compile<QueryInput>(
+    private static readonly CompiledStatement<QueryInput> Statement = StatementCompiler.Compile<QueryInput>(
         i =>
             $"""
-             SELECT
-                 p.Name
-                 << {i.IncludeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
-                 FROM Person p
-                 WHERE 1=1
-                     << {i.BirthDate} ? AND p.BirthDate = {i.BirthDate} >>
-                     << {i.PeopleIds} ? AND p.Id IN {i.PeopleIds} >>
+             WITH RECURSIVE RandomData AS (
+                 SELECT RANDOM() % 100 as Id
+                 UNION ALL
+                 SELECT RANDOM() % 100
+                 FROM RandomData
+                 LIMIT 10
+             )
+             SELECT Id, {i.Name} AS Name, {i.Age} AS Age FROM RandomData;
              """);
 
-    [Benchmark]
-    public void InterpreterImp()
+    public record QueryInput(string Name, int Age);
+
+    public class QueryResult
     {
-        var query = new DynamicQuery(
-            $"""
-             SELECT
-                 p.Name
-                 << {input.IncludeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
-                 FROM Person p
-                 WHERE 1=1
-                     << {input.BirthDate} ? AND p.BirthDate = {input.BirthDate} >>
-                     << {input.PeopleIds} ? AND p.Id IN {input.PeopleIds} >>
-             """);
+        public int Id { get; init; }
 
-        var command = new SqlCommand();
-        query.RenderOn(command);
+        public string Name { get; init; }
+
+        public int Age { get; init; }
     }
 
     [Benchmark]
-    public void CompiledImp()
+    public async Task DynamicSQL()
     {
-        var command = new SqlCommand();
-        compiledStatement.Render(input, command);
+        var input = new QueryInput("Name_Value", 39);
+
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+
+        var result = await Statement.QueryListAsync<QueryResult>(connection, input);
     }
 
-    record QueryInput(DateOnly BirthDate, int[] PeopleIds, bool IncludeAddresses);
+    [Benchmark]
+    public async Task Dapper()
+    {
+        var input = new QueryInput("Name_Value", 39);
+
+        await using var connection = new SqliteConnection("Data Source=:memory:");
+
+        var result = await connection.QueryAsync<QueryResult>(
+            """
+            WITH RECURSIVE RandomData AS (
+                 SELECT RANDOM() % 100 as Id
+                 UNION ALL
+                 SELECT RANDOM() % 100
+                 FROM RandomData
+                 LIMIT 10
+             )
+             SELECT Id, @Name AS Name, @Age AS Age FROM RandomData;
+            """,
+            input);
+    }
 }

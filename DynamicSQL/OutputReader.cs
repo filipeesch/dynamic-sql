@@ -14,11 +14,15 @@ public static class OutputReader<T>
 
     public static Func<DbDataReader, T> GetReaderFunc(DbDataReader reader)
     {
-        var columns = reader.GetColumnSchema();
+        var columns = Enumerable
+            .Range(0, reader.FieldCount)
+            .Select(i => new Column(i, reader.GetName(i)))
+            .ToList();
+
         return GetReadFunc(columns);
     }
 
-    private static Func<DbDataReader, T> GetReadFunc(IReadOnlyCollection<DbColumn> columns)
+    private static Func<DbDataReader, T> GetReadFunc(IReadOnlyList<Column> columns)
     {
         var readerKey = GetCompiledReaderKey(columns);
 
@@ -35,7 +39,7 @@ public static class OutputReader<T>
         return readFunc;
     }
 
-    private static Func<DbDataReader, T> CreateCompiledReadFunc(IEnumerable<DbColumn> columns)
+    private static Func<DbDataReader, T> CreateCompiledReadFunc(IReadOnlyList<Column> columns)
     {
         var readerParameter = Expression.Parameter(typeof(DbDataReader), "reader");
 
@@ -49,7 +53,7 @@ public static class OutputReader<T>
     }
 
     private static Expression CreateParameterConstructorStrategy(
-        IEnumerable<DbColumn> columns,
+        IReadOnlyList<Column> columns,
         Expression readerParameter)
     {
         var constructors = typeof(T).GetConstructors();
@@ -67,19 +71,19 @@ public static class OutputReader<T>
                 par =>
                 (
                     Parameter: par,
-                    Column: columns.FirstOrDefault(col => col.ColumnName.Equals(par.Name, StringComparison.InvariantCultureIgnoreCase))
+                    Column: columns.FirstOrDefault(col => col.Name.Equals(par.Name, StringComparison.InvariantCultureIgnoreCase))
                 ))
             .Select(
                 parameter => ReaderHelper.CreateDataReaderGetValueExpression(
                     readerParameter,
                     parameter.Parameter.ParameterType,
-                    parameter.Column?.ColumnOrdinal));
+                    parameter.Column?.Index));
 
         return Expression.New(ctor, parameters);
     }
 
     private static Expression CreateDefaultConstructorStrategy(
-        IEnumerable<DbColumn> columns,
+        IEnumerable<Column> columns,
         Expression readerParameter)
     {
         var expressions = new List<Expression>();
@@ -88,7 +92,7 @@ public static class OutputReader<T>
 
         expressions.AddRange(
             columns
-                .Select(x => (Property: typeof(T).GetProperty(x.ColumnName), Column: x))
+                .Select(x => (Property: typeof(T).GetProperty(x.Name), Column: x))
                 .Where(x => x.Property is not null)
                 .Select(
                     property => Expression.Assign(
@@ -96,12 +100,19 @@ public static class OutputReader<T>
                         ReaderHelper.CreateDataReaderGetValueExpression(
                             readerParameter,
                             property.Property!.PropertyType,
-                            property.Column.ColumnOrdinal))));
+                            property.Column.Index))));
 
         expressions.Add(resultVariable);
 
         return Expression.Block([resultVariable], expressions);
     }
 
-    private static string GetCompiledReaderKey(IEnumerable<DbColumn> columns) => string.Join(",", columns.Select(x => x.ColumnName));
+    private static string GetCompiledReaderKey(IEnumerable<Column> columns) => string.Join(",", columns.Select(x => x.Name));
+
+    private class Column(int index, string name)
+    {
+        public int Index { get; } = index;
+
+        public string Name { get; } = name;
+    }
 }

@@ -27,7 +27,7 @@ public class CompiledStatement<TInput>
 
     public void Render(TInput input, DbCommand command)
     {
-        var builder = new StringBuilder(_predictedStatementLength);
+        var builder = new PooledStringBuilder(_predictedStatementLength);
         var processor = new StatementProcessor(builder, command, _getValuesMethod(input));
 
         _renderMethod(processor);
