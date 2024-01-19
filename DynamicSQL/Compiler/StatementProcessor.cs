@@ -4,23 +4,31 @@ using System;
 using System.Collections;
 using System.Data.Common;
 using System.Linq;
-using System.Text;
 using DynamicSQL.Parser.Expressions;
 
-internal class StatementProcessor(StringBuilder builder, DbCommand command, object[] values) : IStatementProcessor
+internal class StatementProcessor(PooledStringBuilder builder, DbCommand command, object[] values) : IStatementProcessor
 {
-    public void RenderTextExpression(TextExpression expression) => builder.Append($" {expression.Text} ");
+    public void RenderTextExpression(TextExpression expression) =>
+        builder
+            .Append(' ')
+            .Append(expression.Text)
+            .Append(' ');
 
     public void RenderParameterExpression(ParameterExpression expression)
     {
-        var parameterName = $"p{expression.ParameterIndex}";
+        var parameterName = new ValueStringBuilder(stackalloc char[16]);
+        parameterName.Append('p');
+        parameterName.Append(expression.ParameterIndex);
+
         var value = values[expression.ParameterIndex];
 
-        builder.Append($"@{parameterName}");
+        builder
+            .Append('@')
+            .Append(parameterName);
 
         var parameter = command.CreateParameter();
 
-        parameter.ParameterName = parameterName;
+        parameter.ParameterName = parameterName.ToString();
         parameter.Value = value;
 
         command.Parameters.Add(parameter);
@@ -38,34 +46,51 @@ internal class StatementProcessor(StringBuilder builder, DbCommand command, obje
 
         builder.Append("IN(");
 
-        using var enumerator = enumerable
-            .Cast<object>()
-            .GetEnumerator();
-
         var index = 0;
 
-        var baseParameterName = $"p{expression.ParameterIndex}";
+        var baseParameterName = new ValueStringBuilder(stackalloc char[16]);
+        baseParameterName.Append('p');
+        baseParameterName.Append(expression.ParameterIndex);
 
-        while (enumerator.MoveNext())
+        var enumerator = enumerable.GetEnumerator();
+
+        var parameterName = new ValueStringBuilder(stackalloc char[16]);
+
+        try
         {
-            if (index > 0)
+            while (enumerator.MoveNext())
             {
-                builder.Append(',');
+                if (index > 0)
+                {
+                    builder.Append(',');
+                }
+
+                parameterName.Clear();
+                parameterName.Append(baseParameterName);
+                parameterName.Append('_');
+                parameterName.Append(index++);
+
+                builder
+                    .Append('@')
+                    .Append(parameterName);
+
+                var parameter = command.CreateParameter();
+
+                parameter.ParameterName = parameterName.ToString();
+                parameter.Value = enumerator.Current;
+
+                command.Parameters.Add(parameter);
             }
-
-            var parameterName = $"{baseParameterName}_{index++}";
-
-            builder.Append($"@{parameterName}");
-
-            var parameter = command.CreateParameter();
-
-            parameter.ParameterName = parameterName;
-            parameter.Value = enumerator.Current;
-
-            command.Parameters.Add(parameter);
+        }
+        finally
+        {
+            if (enumerator is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
 
-        builder.Append(")");
+        builder.Append(')');
     }
 
     public bool ConditionValueTest(int conditionValueIndex)

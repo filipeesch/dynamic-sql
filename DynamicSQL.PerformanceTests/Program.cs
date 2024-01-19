@@ -14,15 +14,16 @@ var statement = StatementCompiler.Compile<QueryInput>(
          """);
 
 var input = new QueryInput(
-    null,
+    new DateOnly(1989, 3, 12),
     new[] { 1, 2, 3, 4 },
     true);
 
-await using var connection = new SqlConnection("...");
+var command = new SqlCommand();
 
-var result = await statement.QueryListAsync<QueryResult>(connection, input);
-
-
-public record QueryResult(string Name, string Addresses);
+for (int i = 0; i < 10000; i++)
+{
+    statement.Render(input, command);
+    command.Parameters.Clear();
+}
 
 public record QueryInput(DateOnly? BirthDate, IEnumerable<int> PeopleIds, bool IncludeAddresses);
