@@ -15,7 +15,8 @@ public class StatementParser
         return new ParsedStatement(
             stack
                 .Reverse()
-                .ToList());
+                .ToList(),
+            stack.VariationExpressions);
     }
 
     private void ParseInternal(string template, ExpressionStack stack)

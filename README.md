@@ -12,35 +12,37 @@ String interpolation placeholders are automatically converted into SQL parameter
 
 #### Example:
 ```csharp
-private static readonly CompiledStatement<QueryInput> Statement = StatementCompiler.Compile<QueryInput>(
+public record QueryResult(string Name, string Addresses);
+
+public record QueryInput(DateOnly? BirthDate, IEnumerable<int> PeopleIds, bool IncludeAddresses);
+
+private static CompiledStatement<QueryInput> statement = StatementCompiler.Compile<QueryInput>(
     i =>
         $"""
          SELECT
-             p.Name
-             << {i.IncludeAddresses} ?, (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
+             p.Name,
+             << {i.IncludeAddresses} ? (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
              FROM Person p
              WHERE 1=1
                  << {i.BirthDate} ? AND p.BirthDate = {i.BirthDate} >>
                  << {i.PeopleIds} ? AND p.Id IN {i.PeopleIds} >>
          """);
 
-public record QueryResult(string Name, string Addresses);
-
 var input = new QueryInput(
     null,
     new[] { 1, 2, 3, 4 },
     true);
 
-await using var connection = new SqlConnection(...);
+await using var connection = new SqlConnection("...");
 
-var result = await Statement.QueryListAsync<QueryResult>(connection, input);
+var result = await statement.QueryListAsync<QueryResult>(connection, input);
 ```
 
 #### Resulting SQL Statement:
 ```sql
 SELECT
-    p.Name
-    , (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) AS Addresses
+    p.Name,
+    (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) AS Addresses
 FROM Person p
 WHERE 1=1
     AND p.Id IN (@p4_0, @p4_1, @p4_2, @p4_3)

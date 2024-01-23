@@ -27,6 +27,7 @@ public static class StatementCompiler
         return new CompiledStatement<TInput>(
             renderMethod,
             input => getValuesMethod(input).GetArguments(),
-            format.Length);
+            format.Length,
+            parsed.VariationExpressions);
     }
 }

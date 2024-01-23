@@ -93,9 +93,11 @@ internal class StatementProcessor(PooledStringBuilder builder, DbCommand command
         builder.Append(')');
     }
 
-    public bool ConditionValueTest(int conditionValueIndex)
+    public bool ConditionValueTest(int conditionValueIndex) => ConditionValueTest(values[conditionValueIndex]);
+
+    public static bool ConditionValueTest(object value)
     {
-        return values[conditionValueIndex] switch
+        return value switch
         {
             null => false,
             bool boolValue => boolValue,
