@@ -28,19 +28,19 @@ internal static class ReaderHelper
 
     public static Expression CreateDataReaderGetValueExpression(Expression dataReaderExp, Type fieldType, int? columnOrdinal)
     {
-        var innerType = Nullable.GetUnderlyingType(fieldType);
-
-        var callGetValueExp = Expression.Call(
-            dataReaderExp,
-            GetValueMethodMap[innerType ?? fieldType],
-            Expression.Constant(columnOrdinal));
-
         var defaultValueExp = Expression.Default(fieldType);
 
         if (columnOrdinal is null)
         {
             return defaultValueExp;
         }
+
+        var innerType = Nullable.GetUnderlyingType(fieldType);
+
+        var callGetValueExp = Expression.Call(
+            dataReaderExp,
+            GetValueMethodMap[innerType ?? fieldType],
+            Expression.Constant(columnOrdinal));
 
         if (innerType is null && fieldType != typeof(string))
         {
