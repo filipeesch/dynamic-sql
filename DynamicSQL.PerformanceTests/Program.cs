@@ -1,29 +1,76 @@
 ﻿using DynamicSQL.Compiler;
-using Microsoft.Data.SqlClient;
+using DynamicSQL.PerformanceTests;
+using Microsoft.Data.Sqlite;
 
-var statement = StatementCompiler.Compile<QueryInput>(
-    i =>
-        $"""
-         SELECT
-             p.Name,
-             << {i.IncludeAddresses} ? (SELECT a.Name FROM Address a WHERE a.PersonId = p.Id FOR JSON AUTO) : '' >> AS Addresses
-             FROM Person p
-             WHERE 1=1
-                 << {i.BirthDate} ? AND p.BirthDate = {i.BirthDate} >>
-                 << {i.PeopleIds} ? AND p.Id IN {i.PeopleIds} >>
-         """);
+var input = new DynamicQueryInput(
+    true,
+    true,
+    new[] { 10, 11, 12, 13, 14, 16, 17, 18 },
+    1000);
 
-var input = new QueryInput(
-    new DateOnly(1989, 3, 12),
-    new[] { 1, 2, 3, 4 },
-    true);
+var DynamicQuery = StatementCompiler.Compile<DynamicQueryInput>(
+    i => $"""
+          SELECT
+            Id
+            << {i.IncludeName} ?, Name >>
+            << {i.IncludeBirthDate} ?, BirthDate >>
+          FROM Person
+          WHERE 1=1
+            << {i.Ids} ? AND Id IN {i.Ids} >>
+            << {i.Count} ? LIMIT {i.Count} >>
+          """);
 
-var command = new SqlCommand();
+var connection = new SqliteConnection("Data Source=:memory:");
 
-for (int i = 0; i < 10000; i++)
+using var command = connection.CreateCommand();
+
+connection.Open();
+using var transaction = connection.BeginTransaction();
+
+command.Transaction = transaction;
+command.CommandText =
+    """
+    CREATE TABLE Person (
+        Id INT PRIMARY KEY,
+        Name VARCHAR(200),
+        BirthDate DATE
+    );
+    """;
+
+command.ExecuteNonQuery();
+
+command.CommandText = "INSERT INTO Person VALUES(@Id, @Name, @BirthDate)";
+command.Parameters.Add(new SqliteParameter("Id", SqliteType.Integer));
+command.Parameters.Add(new SqliteParameter("Name", SqliteType.Text));
+command.Parameters.Add(new SqliteParameter("BirthDate", SqliteType.Integer));
+
+for (var i = 1; i <= 100_000; i++)
 {
-    statement.Render(input, command);
-    command.Parameters.Clear();
+    command.Parameters["Id"].Value = i;
+    command.Parameters["Name"].Value = $"Name_{i}";
+    command.Parameters["BirthDate"].Value = DateTime.UtcNow.AddDays(-Random.Shared.Next(365, 365 * 100));
+    command.ExecuteNonQuery();
 }
 
-public record QueryInput(DateOnly? BirthDate, IEnumerable<int> PeopleIds, bool IncludeAddresses);
+transaction.Commit();
+
+var result = await DynamicQuery.QueryListAsync<QueryResult>(connection, input, predictedListSize: input.Count);
+
+namespace DynamicSQL.PerformanceTests
+{
+    public record DynamicQueryInput(
+        bool IncludeName,
+        bool IncludeBirthDate,
+        IEnumerable<int>? Ids,
+        int? Count);
+
+
+    public class QueryResult
+    {
+        public int Id { get; init; }
+
+        public string Name { get; init; }
+
+        public DateTime BirtDate { get; init; }
+    }
+}

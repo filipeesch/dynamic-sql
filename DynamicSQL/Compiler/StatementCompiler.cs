@@ -6,7 +6,7 @@ using DynamicSQL.Parser;
 
 public static class StatementCompiler
 {
-    public static CompiledStatement<TInput> Compile<TInput>(Expression<Func<TInput, FormattableString>> exp)
+    public static Statement<TInput> Compile<TInput>(Expression<Func<TInput, FormattableString>> exp)
     {
         if (
             exp.Body is not MethodCallExpression methodExp ||
@@ -24,7 +24,7 @@ public static class StatementCompiler
 
         var renderMethod = compiler.Compile();
 
-        return new CompiledStatement<TInput>(
+        return new Statement<TInput>(
             renderMethod,
             input => getValuesMethod(input).GetArguments(),
             format.Length);
