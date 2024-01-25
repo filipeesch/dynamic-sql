@@ -31,6 +31,6 @@ jobs:
       - name: Build Library
         run: dotnet build DynamicSQL.sln -c Release
 
-#      - name: UnitTest
-#        run: |
-#          dotnet test DynamicSQL.UnitTests.csproj -c Release --logger "console;verbosity=detailed"
+      - name: Tests
+        run: |
+          dotnet test DynamicSQL.Tests/DynamicSQL.Tests.csproj -c Release --logger "console;verbosity=detailed"

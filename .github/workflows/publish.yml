@@ -26,6 +26,10 @@ jobs:
       - name: Build Library
         run: dotnet build DynamicSQL.sln -c Release
 
+      - name: Tests
+        run: |
+          dotnet test DynamicSQL.Tests/DynamicSQL.Tests.csproj -c Release --logger "console;verbosity=detailed"
+
       - name: Pack
         run: dotnet pack ./DynamicSQL.sln -c Release /p:Version=${{ github.event.release.tag_name }} -o ./drop
 
