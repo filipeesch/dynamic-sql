@@ -8,7 +8,7 @@ using DynamicSQL.Parser.Expressions;
 
 internal class TokenizerEnumerable : IEnumerable<TokenExpression>
 {
-    private static readonly Regex TokensRegex = new(@"<<|>>|\{|\}|\?|:|\s+IN\s+", RegexOptions.Singleline);
+    private static readonly Regex TokensRegex = new(@"<<|>>|\{|\}|\?|:|\s+IN\s+\{", RegexOptions.Singleline);
     private readonly IReadOnlyList<TokenExpression> _tokens;
 
     public TokenizerEnumerable(string template)
@@ -16,7 +16,8 @@ internal class TokenizerEnumerable : IEnumerable<TokenExpression>
         _tokens = TokensRegex
             .Matches(template)
             .Cast<Match>()
-            .Select(match => TokenExpression.FromSymbol(match.Value.Trim(), match.Index, match.Index + match.Length - 1))
+            .SelectMany(
+                match => TokenExpression.FromSymbol(match.Value.Trim(), match.Index, match.Index + match.Length - 1))
             .ToList();
     }
 

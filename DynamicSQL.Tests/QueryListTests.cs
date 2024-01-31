@@ -36,11 +36,11 @@ public class QueryListTests
     }
 
     [Fact]
-    public async Task InOperator_ReturnList()
+    public async Task InOperator_GivenACollectionParameter_ReturnList()
     {
         // Arrange
         var statement = StatementCompiler.Compile<IEnumerable<int>>(
-            i => $"SELECT Id, Name FROM Person WHERE Id IN {i}");
+            i => $"SELECT Id, Name FROM Person WHERE Id IN    {i}");
         var input = new[] { 30, 31, 32, 33, 34 };
 
         // Act
@@ -56,5 +56,23 @@ public class QueryListTests
             Assert.Equal(id, result[i].Id);
             Assert.Equal($"Person_{id}", result[i].Name);
         }
+    }
+    
+    [Fact]
+    public async Task InOperator_GivenASingleParameter_ReturnSingle()
+    {
+        // Arrange
+        var statement = StatementCompiler.Compile<int>(
+            i => $"SELECT Id, Name FROM Person WHERE Id IN ({i})");
+        const int input = 30;
+
+        // Act
+        var result = await statement.QueryListAsync<PersonRecord>(_connection, input);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Single(result);
+        Assert.Equal(input, result[0].Id);
+        Assert.Equal($"Person_{input}", result[0].Name);
     }
 }
