@@ -4,7 +4,7 @@ using DynamicSQL.Parser.Expressions;
 
 internal interface IStatementProcessor
 {
-    void RenderTextExpression(TextExpression expression);
+    void RenderText(string text);
 
     void RenderParameterExpression(ParameterExpression expression);
 

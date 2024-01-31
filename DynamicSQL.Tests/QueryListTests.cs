@@ -2,6 +2,7 @@ namespace DynamicSQL.Tests;
 
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Linq;
 using System.Threading.Tasks;
 using DynamicSQL.Compiler;
 using Xunit;
@@ -36,7 +37,7 @@ public class QueryListTests
     }
 
     [Fact]
-    public async Task InOperator_ReturnList()
+    public async Task InArrayExpression_ReturnList()
     {
         // Arrange
         var statement = StatementCompiler.Compile<IEnumerable<int>>(
@@ -45,6 +46,28 @@ public class QueryListTests
 
         // Act
         var result = await statement.QueryListAsync<PersonRecord>(_connection, input);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(5, result.Count);
+
+        for (var i = 0; i <= 4; i++)
+        {
+            var id = i + 30;
+            Assert.Equal(id, result[i].Id);
+            Assert.Equal($"Person_{id}", result[i].Name);
+        }
+    }
+
+    [Fact]
+    public async Task LiteralInOperator_ReturnList()
+    {
+        // Arrange
+        var statement = StatementCompiler.Compile<IEnumerable<int>>(
+            i => $"SELECT Id, Name FROM Person WHERE Id IN (30, 31, 32, 33, 34)");
+
+        // Act
+        var result = await statement.QueryListAsync<PersonRecord>(_connection, Enumerable.Empty<int>());
 
         // Assert
         Assert.NotNull(result);

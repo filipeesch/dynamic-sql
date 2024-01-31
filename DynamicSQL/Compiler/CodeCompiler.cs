@@ -12,8 +12,8 @@ using ParameterExpression = DynamicSQL.Parser.Expressions.ParameterExpression;
 
 internal class CodeCompiler(ParsedStatement parsed)
 {
-    private static readonly MethodInfo RenderTextExpressionMethod = typeof(IStatementProcessor)
-        .GetMethod(nameof(IStatementProcessor.RenderTextExpression))!;
+    private static readonly MethodInfo RenderTextMethod = typeof(IStatementProcessor)
+        .GetMethod(nameof(IStatementProcessor.RenderText))!;
 
     private static readonly MethodInfo RenderParameterExpressionMethod = typeof(IStatementProcessor)
         .GetMethod(nameof(IStatementProcessor.RenderParameterExpression))!;
@@ -44,10 +44,11 @@ internal class CodeCompiler(ParsedStatement parsed)
                 node =>
                     node switch
                     {
-                        TextExpression textExpression => CreateTextExpressionCall(textExpression, processor),
-                        ParameterExpression parameterExpression => CreateParameterExpressionCall(parameterExpression, processor),
-                        InArrayExpression inArrayExpression => CreateInArrayExpressionCall(inArrayExpression, processor),
-                        ConditionalExpression conditionalExpression => CreateConditionalExpressionCall(conditionalExpression, processor),
+                        TextExpression exp => CreateRenderTextCall(exp.Text, processor),
+                        InOperatorExpression => CreateRenderTextCall("IN", processor),
+                        ParameterExpression exp => CreateRenderParameterExpressionCall(exp, processor),
+                        InArrayExpression exp => CreateRenderInArrayExpressionCall(exp, processor),
+                        ConditionalExpression exp => CreateConditionalExpressionCall(exp, processor),
                         _ => throw new InvalidOperationException()
                     }));
     }
@@ -70,12 +71,12 @@ internal class CodeCompiler(ParsedStatement parsed)
             Expression.IfThenElse(testMethodCall, trueExpression, falseExpression);
     }
 
-    private Expression CreateParameterExpressionCall(ParameterExpression parameter, Expression processor) =>
+    private Expression CreateRenderParameterExpressionCall(ParameterExpression parameter, Expression processor) =>
         Expression.Call(processor, RenderParameterExpressionMethod, Expression.Constant(parameter));
 
-    private Expression CreateInArrayExpressionCall(InArrayExpression inArrayExpression, Expression processor) =>
+    private Expression CreateRenderInArrayExpressionCall(InArrayExpression inArrayExpression, Expression processor) =>
         Expression.Call(processor, RenderInArrayExpressionMethod, Expression.Constant(inArrayExpression));
 
-    private Expression CreateTextExpressionCall(TextExpression textExpression, Expression processor) =>
-        Expression.Call(processor, RenderTextExpressionMethod, Expression.Constant(textExpression));
+    private Expression CreateRenderTextCall(string text, Expression processor) =>
+        Expression.Call(processor, RenderTextMethod, Expression.Constant(text));
 }

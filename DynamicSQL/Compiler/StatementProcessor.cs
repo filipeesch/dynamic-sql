@@ -8,10 +8,10 @@ using DynamicSQL.Parser.Expressions;
 
 internal class StatementProcessor(PooledStringBuilder builder, DbCommand command, object[] values) : IStatementProcessor
 {
-    public void RenderTextExpression(TextExpression expression) =>
+    public void RenderText(string text) =>
         builder
             .Append(' ')
-            .Append(expression.Text)
+            .Append(text)
             .Append(' ');
 
     public void RenderParameterExpression(ParameterExpression expression)
