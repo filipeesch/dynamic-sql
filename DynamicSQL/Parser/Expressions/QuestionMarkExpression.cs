@@ -11,7 +11,7 @@ internal class QuestionMarkExpression(int startIndex, int endIndex) : TokenExpre
             throw new Exception($"Conditional Start should ends with '{TokenSymbols.QuestionMark}'");
         }
 
-        if (stack.Pop() is not ParameterExpression parameter)
+        if (stack.Pop() is not InterpolationExpression parameter)
         {
             throw new Exception("Conditional expression must have a parameter expression");
         }
@@ -21,7 +21,7 @@ internal class QuestionMarkExpression(int startIndex, int endIndex) : TokenExpre
             throw new Exception($"Conditional expression must start with an '{TokenSymbols.OpenTag}'");
         }
 
-        stack.Push(new ConditionalStartParseExpression(parameter.ParameterIndex));
+        stack.Push(new ConditionalStartParseExpression(parameter.Index));
 
         return true;
     }

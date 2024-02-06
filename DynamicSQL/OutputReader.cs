@@ -16,7 +16,7 @@ public static class OutputReader<T>
     {
         var columns = Enumerable
             .Range(0, reader.FieldCount)
-            .Select(i => new Column(i, reader.GetName(i)))
+            .Select((i,c)=> new Column(i, reader.GetName(i)))
             .ToList();
 
         return GetReadFunc(columns);

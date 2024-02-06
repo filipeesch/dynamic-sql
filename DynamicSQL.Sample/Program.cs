@@ -9,7 +9,7 @@ var input = new DynamicQueryInput(
 
 // This object should be static or singleton in real applications
 var query = StatementCompiler.Compile<DynamicQueryInput>(
-    i => $"""
+    (i,c)=> $"""
           SELECT
             Id
             << {i.IncludeName} ?, Name >>

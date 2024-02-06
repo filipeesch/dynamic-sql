@@ -18,7 +18,7 @@ public class QueryListTests
     {
         // Arrange
         var statement = StatementCompiler.Compile<IdRangeInput>(
-            i => $"SELECT Id, Name FROM Person WHERE Id >= {i.StartId} AND Id <= {i.EndId}");
+            (i, c) => $"SELECT Id, Name FROM Person WHERE Id >= {i.StartId} AND Id <= {i.EndId}");
         var input = new IdRangeInput(30, 39);
 
         // Act
@@ -41,7 +41,7 @@ public class QueryListTests
     {
         // Arrange
         var statement = StatementCompiler.Compile<IEnumerable<int>>(
-            i => $"SELECT Id, Name FROM Person WHERE Id IN {i}");
+            (i, c) => $"SELECT Id, Name FROM Person WHERE Id IN {i}");
         var input = new[] { 30, 31, 32, 33, 34 };
 
         // Act
@@ -64,7 +64,7 @@ public class QueryListTests
     {
         // Arrange
         var statement = StatementCompiler.Compile<IEnumerable<int>>(
-            i => $"SELECT Id, Name FROM Person WHERE Id IN (30, 31, 32, 33, 34)");
+            (i, c) => $"SELECT Id, Name FROM Person WHERE Id IN (30, 31, 32, 33, 34)");
 
         // Act
         var result = await statement.QueryListAsync<PersonRecord>(_connection, Enumerable.Empty<int>());
@@ -78,6 +78,48 @@ public class QueryListTests
             var id = i + 30;
             Assert.Equal(id, result[i].Id);
             Assert.Equal($"Person_{id}", result[i].Name);
+        }
+    }
+
+    [Fact]
+    public async Task SegmentRenderer_ReturnList()
+    {
+        // Arrange
+        var statement = StatementCompiler.Compile<IEnumerable<int>>(
+            (i, c) => $"SELECT Id, Name FROM Person WHERE Id IN({c.SegmentRenderer(RenderIdsParameters)})");
+        var input = new[] { 30, 31, 32, 33, 34 };
+
+        // Act
+        var result = await statement.QueryListAsync<PersonRecord>(_connection, input);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(5, result.Count);
+
+        for (var i = 0; i <= 4; i++)
+        {
+            var id = i + 30;
+            Assert.Equal(id, result[i].Id);
+            Assert.Equal($"Person_{id}", result[i].Name);
+        }
+    }
+
+    private static void RenderIdsParameters(SegmentRendererContext<IEnumerable<int>> context)
+    {
+        var count = 0;
+
+        foreach (var i in context.Input)
+        {
+            if (count > 0)
+            {
+                context.CommandTextBuilder.Append(',');
+            }
+
+            var p = context.Parameters.Add($"Id{count++}", i);
+
+            context.CommandTextBuilder
+                .Append('@')
+                .Append(p.ParameterName);
         }
     }
 }

@@ -2,13 +2,13 @@ namespace DynamicSQL.Parser.Expressions;
 
 using System;
 
-internal class ParameterExpression(int parameterIndex) : IParsedExpression
+internal class InterpolationExpression(int index) : IParsedExpression
 {
-    public int ParameterIndex { get; } = parameterIndex;
+    public int Index { get; } = index;
 
     public bool TryReduce(ExpressionStack stack)
     {
-        if (stack[0] is not ParameterExpression)
+        if (stack[0] is not InterpolationExpression)
         {
             throw new Exception("Invalid braces closing");
         }
@@ -18,10 +18,10 @@ internal class ParameterExpression(int parameterIndex) : IParsedExpression
             return false;
         }
 
-        var parameter = (ParameterExpression)stack.Pop();
+        var interpolation = (InterpolationExpression)stack.Pop();
         _ = (InOperatorExpression)stack.Pop();
 
-        stack.Push(new InArrayExpression(parameter.ParameterIndex));
+        stack.Push(new InArrayExpression(interpolation.Index));
         return true;
     }
 }

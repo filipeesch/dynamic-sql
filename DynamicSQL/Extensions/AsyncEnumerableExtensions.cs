@@ -1,4 +1,4 @@
-namespace DynamicSQL.Extensions;
+namespace DynamicSQL;
 
 using System.Collections.Generic;
 using System.Threading;

@@ -6,7 +6,10 @@ using DynamicSQL.Parser;
 
 public static class StatementCompiler
 {
-    public static Statement<TInput> Compile<TInput>(Expression<Func<TInput, FormattableString>> exp)
+    [Obsolete("This method was discontinued, please use it's overload", true)]
+    public static Statement<TInput> Compile<TInput>(Expression<Func<TInput, FormattableString>> exp) => throw new NotImplementedException();
+
+    public static Statement<TInput> Compile<TInput>(Expression<Func<TInput, StatementComposer<TInput>, FormattableString>> exp)
     {
         if (
             exp.Body is not MethodCallExpression methodExp ||
@@ -24,9 +27,11 @@ public static class StatementCompiler
 
         var renderMethod = compiler.Compile();
 
+        var statementBuilder = new StatementComposer<TInput>();
+
         return new Statement<TInput>(
             renderMethod,
-            input => getValuesMethod(input).GetArguments(),
+            input => getValuesMethod(input, statementBuilder).GetArguments(),
             format.Length);
     }
 }

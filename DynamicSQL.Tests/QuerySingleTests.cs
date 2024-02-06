@@ -14,7 +14,7 @@ public class QuerySingleTests
     public async Task ExistingId_ReturnPersonRecord()
     {
         // Arrange
-        var statement = StatementCompiler.Compile<int>(i => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i}");
+        var statement = StatementCompiler.Compile<int>((i, c) => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i}");
         const int id = 10;
 
         // Act
@@ -31,7 +31,7 @@ public class QuerySingleTests
     public async Task ExistingId_ReturnPersonClass()
     {
         // Arrange
-        var statement = StatementCompiler.Compile<int>(i => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i}");
+        var statement = StatementCompiler.Compile<int>((i, c) => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i}");
         const int id = 10;
 
         // Act
@@ -48,7 +48,7 @@ public class QuerySingleTests
     public async Task NonExistingId_ReturnNull()
     {
         // Arrange
-        var statement = StatementCompiler.Compile<int>(i => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i}");
+        var statement = StatementCompiler.Compile<int>((i, c) => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i}");
         const int id = -10;
 
         // Act

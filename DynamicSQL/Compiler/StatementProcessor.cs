@@ -2,11 +2,15 @@ namespace DynamicSQL.Compiler;
 
 using System;
 using System.Collections;
-using System.Data.Common;
 using System.Linq;
 using DynamicSQL.Parser.Expressions;
 
-internal class StatementProcessor(PooledStringBuilder builder, DbCommand command, object[] values) : IStatementProcessor
+internal class StatementProcessor<TInput>(
+    CommandTextBuilder builder,
+    StatementParameters parameters,
+    TInput input,
+    object[] values)
+    : IStatementProcessor
 {
     public void RenderText(string text) =>
         builder
@@ -14,34 +18,30 @@ internal class StatementProcessor(PooledStringBuilder builder, DbCommand command
             .Append(text)
             .Append(' ');
 
-    public void RenderParameterExpression(ParameterExpression expression)
+    public void RenderInterpolationExpression(InterpolationExpression expression)
     {
-        var parameterName = new ValueStringBuilder(stackalloc char[16]);
-        parameterName.Append('p');
-        parameterName.Append(expression.ParameterIndex);
+        var value = values[expression.Index];
 
-        var value = values[expression.ParameterIndex];
+        switch (value)
+        {
+            case SegmentRenderer<TInput> renderer:
+                renderer.Render(new(builder, parameters, input, expression.Index));
+                break;
 
-        builder
-            .Append('@')
-            .Append(parameterName);
-
-        var parameter = command.CreateParameter();
-
-        parameter.ParameterName = parameterName.ToString();
-        parameter.Value = value;
-
-        command.Parameters.Add(parameter);
+            default:
+                CreateParameter(expression, value);
+                break;
+        }
     }
 
     public void RenderInArrayExpression(InArrayExpression expression)
     {
-        var value = values[expression.ParameterIndex];
+        var value = values[expression.InterpolationIndex];
 
         if (value is not IEnumerable enumerable)
         {
             throw new ArgumentException(
-                $"The IN operator must be used only in collection types. Index: {expression.ParameterIndex} Value: {value}");
+                $"The IN operator must be used only in collection types. Index: {expression.InterpolationIndex} Value: {value}");
         }
 
         builder.Append("IN(");
@@ -50,7 +50,7 @@ internal class StatementProcessor(PooledStringBuilder builder, DbCommand command
 
         var baseParameterName = new ValueStringBuilder(stackalloc char[16]);
         baseParameterName.Append('p');
-        baseParameterName.Append(expression.ParameterIndex);
+        baseParameterName.Append(expression.InterpolationIndex);
 
         var enumerator = enumerable.GetEnumerator();
 
@@ -74,12 +74,7 @@ internal class StatementProcessor(PooledStringBuilder builder, DbCommand command
                     .Append('@')
                     .Append(parameterName);
 
-                var parameter = command.CreateParameter();
-
-                parameter.ParameterName = parameterName.ToString();
-                parameter.Value = enumerator.Current;
-
-                command.Parameters.Add(parameter);
+                parameters.Add(parameterName.ToString(), enumerator.Current!);
             }
         }
         finally
@@ -103,5 +98,18 @@ internal class StatementProcessor(PooledStringBuilder builder, DbCommand command
             IEnumerable enumerable => enumerable.Cast<object>().Any(),
             _ => true
         };
+    }
+
+    private void CreateParameter(InterpolationExpression expression, object value)
+    {
+        var parameterName = new ValueStringBuilder(stackalloc char[16]);
+        parameterName.Append('p');
+        parameterName.Append(expression.Index);
+
+        builder
+            .Append('@')
+            .Append(parameterName);
+
+        parameters.Add(parameterName.ToString(), value);
     }
 }

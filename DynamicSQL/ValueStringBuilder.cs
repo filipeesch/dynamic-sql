@@ -2,7 +2,7 @@ namespace DynamicSQL;
 
 using System;
 
-internal ref struct ValueStringBuilder
+public ref struct ValueStringBuilder
 {
     private readonly Span<char> _buffer;
     private int _position = 0;
@@ -30,20 +30,5 @@ internal ref struct ValueStringBuilder
         _position += value.Length;
     }
 
-    public void Append(int value)
-    {
-        Span<char> buffer = stackalloc char[16];
-        var index = 0;
-
-        do
-        {
-            buffer[index++] = (char)('0' + value % 10);
-            value /= 10;
-        } while (value > 0);
-
-        buffer.Slice(0, index).Reverse();
-
-        buffer.Slice(0, index).CopyTo(_buffer.Slice(_position));
-        _position += index;
-    }
+    public void Append(int value) => _position += PrimitiveParser.Parse(value, _buffer.Slice(_position));
 }

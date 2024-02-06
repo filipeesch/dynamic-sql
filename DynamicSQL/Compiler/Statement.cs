@@ -7,7 +7,6 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using DynamicSQL.Extensions;
 
 public class Statement<TInput>
 {
@@ -27,8 +26,13 @@ public class Statement<TInput>
 
     public void Render(TInput input, DbCommand command)
     {
-        var builder = new PooledStringBuilder(_predictedStatementLength * 2);
-        var processor = new StatementProcessor(builder, command, _getValuesMethod(input));
+        var builder = new CommandTextBuilder(_predictedStatementLength * 2);
+
+        var processor = new StatementProcessor<TInput>(
+            builder,
+            new StatementParameters(command),
+            input,
+            _getValuesMethod(input));
 
         _renderMethod(processor);
 
