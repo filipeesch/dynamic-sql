@@ -9,16 +9,16 @@ var input = new DynamicQueryInput(
     1000);
 
 var DynamicQuery = StatementCompiler.Compile<DynamicQueryInput>(
-    i => $"""
-          SELECT
-            Id
-            << {i.IncludeName} ?, Name >>
-            << {i.IncludeBirthDate} ?, BirthDate >>
-          FROM Person
-          WHERE 1=1
-            << {i.Ids} ? AND Id IN {i.Ids} >>
-            << {i.Count} ? LIMIT {i.Count} >>
-          """);
+    (i, c) => $"""
+               SELECT
+                 Id
+                 << {i.IncludeName} ?, Name >>
+                 << {i.IncludeBirthDate} ?, BirthDate >>
+               FROM Person
+               WHERE 1=1
+                 << {i.Ids} ? AND Id IN {i.Ids} >>
+                 << {i.Count} ? LIMIT {i.Count} >>
+               """);
 
 var connection = new SqliteConnection("Data Source=:memory:");
 

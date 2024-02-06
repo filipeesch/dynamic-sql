@@ -8,15 +8,14 @@ using System.Reflection;
 using DynamicSQL.Parser;
 using DynamicSQL.Parser.Expressions;
 using ConditionalExpression = DynamicSQL.Parser.Expressions.ConditionalExpression;
-using ParameterExpression = DynamicSQL.Parser.Expressions.ParameterExpression;
 
 internal class CodeCompiler(ParsedStatement parsed)
 {
     private static readonly MethodInfo RenderTextMethod = typeof(IStatementProcessor)
         .GetMethod(nameof(IStatementProcessor.RenderText))!;
 
-    private static readonly MethodInfo RenderParameterExpressionMethod = typeof(IStatementProcessor)
-        .GetMethod(nameof(IStatementProcessor.RenderParameterExpression))!;
+    private static readonly MethodInfo RenderInterpolationExpressionMethod = typeof(IStatementProcessor)
+        .GetMethod(nameof(IStatementProcessor.RenderInterpolationExpression))!;
 
     private static readonly MethodInfo RenderInArrayExpressionMethod = typeof(IStatementProcessor)
         .GetMethod(nameof(IStatementProcessor.RenderInArrayExpression))!;
@@ -46,7 +45,7 @@ internal class CodeCompiler(ParsedStatement parsed)
                     {
                         TextExpression exp => CreateRenderTextCall(exp.Text, processor),
                         InOperatorExpression => CreateRenderTextCall("IN", processor),
-                        ParameterExpression exp => CreateRenderParameterExpressionCall(exp, processor),
+                        InterpolationExpression exp => CreateRenderInterpolationExpressionCall(exp, processor),
                         InArrayExpression exp => CreateRenderInArrayExpressionCall(exp, processor),
                         ConditionalExpression exp => CreateConditionalExpressionCall(exp, processor),
                         _ => throw new InvalidOperationException()
@@ -71,8 +70,8 @@ internal class CodeCompiler(ParsedStatement parsed)
             Expression.IfThenElse(testMethodCall, trueExpression, falseExpression);
     }
 
-    private Expression CreateRenderParameterExpressionCall(ParameterExpression parameter, Expression processor) =>
-        Expression.Call(processor, RenderParameterExpressionMethod, Expression.Constant(parameter));
+    private Expression CreateRenderInterpolationExpressionCall(InterpolationExpression parameter, Expression processor) =>
+        Expression.Call(processor, RenderInterpolationExpressionMethod, Expression.Constant(parameter));
 
     private Expression CreateRenderInArrayExpressionCall(InArrayExpression inArrayExpression, Expression processor) =>
         Expression.Call(processor, RenderInArrayExpressionMethod, Expression.Constant(inArrayExpression));

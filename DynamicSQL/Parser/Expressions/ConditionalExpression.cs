@@ -31,7 +31,7 @@ internal class ConditionalExpression : IParsedExpression
         var falseExpressions = GetConditionalSubExpressions(enumerator);
 
         return new ConditionalExpression(
-            startExpression.ConditionValueParameterIndex,
+            startExpression.ConditionValueInterpolationIndex,
             trueExpressions,
             falseExpressions);
     }

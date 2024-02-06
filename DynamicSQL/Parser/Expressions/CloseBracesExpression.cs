@@ -26,7 +26,7 @@ internal class CloseBracesExpression(int startIndex, int endIndex) : TokenExpres
             throw new Exception("Braces closing without opening");
         }
 
-        stack.Push(new ParameterExpression(index));
+        stack.Push(new InterpolationExpression(index));
 
         return true;
     }

@@ -1,7 +1,6 @@
 namespace DynamicSQL.Parser;
 
 using System.Linq;
-using DynamicSQL.Extensions;
 using DynamicSQL.Parser.Expressions;
 
 public class StatementParser

@@ -6,7 +6,7 @@ internal interface IStatementProcessor
 {
     void RenderText(string text);
 
-    void RenderParameterExpression(ParameterExpression expression);
+    void RenderInterpolationExpression(InterpolationExpression expression);
 
     void RenderInArrayExpression(InArrayExpression expression);
 

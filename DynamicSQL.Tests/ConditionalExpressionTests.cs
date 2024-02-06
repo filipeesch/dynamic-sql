@@ -15,22 +15,23 @@ public class ConditionalExpressionTests
         bool? HasAddress);
 
     private static readonly Statement<QueryInput> Statement = StatementCompiler.Compile<QueryInput>(
-        i => $"""
-              SELECT
-                Id
-                << {i.IncludeName} ?,Name >>
-              FROM Person p
-              WHERE 1=1
-                << {i.Id} ? AND Id = {i.Id} >>
-                <<
-                    {i.HasAddress.HasValue} ?
-                    <<
-                        {i.HasAddress == true}
-                        ? AND EXISTS(SELECT * FROM Address WHERE PersonId = p.Id)
-                        : AND NOT EXISTS(SELECT * FROM Address WHERE PersonId = p.Id)
-                    >>
-                >>
-              """);
+        (i, c) =>
+            $"""
+             SELECT
+               Id
+               << {i.IncludeName} ?,Name >>
+             FROM Person p
+             WHERE 1=1
+               << {i.Id} ? AND Id = {i.Id} >>
+               <<
+                   {i.HasAddress.HasValue} ?
+                   <<
+                       {i.HasAddress == true}
+                       ? AND EXISTS(SELECT * FROM Address WHERE PersonId = p.Id)
+                       : AND NOT EXISTS(SELECT * FROM Address WHERE PersonId = p.Id)
+                   >>
+               >>
+             """);
 
     [Fact]
     public async Task QueryList_NameNotIncluded_ReturnWithNameAsNull()

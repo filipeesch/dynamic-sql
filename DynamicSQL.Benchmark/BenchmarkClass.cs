@@ -11,22 +11,22 @@ using DynamicSQL.Compiler;
 public class BenchmarkClass
 {
     private static readonly Statement<SelectAllQueryInput> SelectAllWithLimit = StatementCompiler.Compile<SelectAllQueryInput>(
-        i => $"SELECT Id, Name, BirthDate FROM Person LIMIT {i.Count}");
+        (i, c) => $"SELECT Id, Name, BirthDate FROM Person LIMIT {i.Count}");
 
     private static readonly Statement<QuerySingleInput> QuerySingle = StatementCompiler.Compile<QuerySingleInput>(
-        i => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i.Id}");
+        (i, c) => $"SELECT Id, Name, BirthDate FROM Person WHERE Id = {i.Id}");
 
     private static readonly Statement<DynamicQueryInput> DynamicQuery = StatementCompiler.Compile<DynamicQueryInput>(
-        i => $"""
-              SELECT
-                Id
-                << {i.IncludeName} ?, Name >>
-                << {i.IncludeBirthDate} ?, BirthDate >>
-              FROM Person
-              WHERE 1=1
-                << {i.Ids} ? AND Id IN {i.Ids} >>
-                << {i.Count} ? LIMIT {i.Count} >>
-              """);
+        (i, c) => $"""
+                   SELECT
+                     Id
+                     << {i.IncludeName} ?, Name >>
+                     << {i.IncludeBirthDate} ?, BirthDate >>
+                   FROM Person
+                   WHERE 1=1
+                     << {i.Ids} ? AND Id IN {i.Ids} >>
+                     << {i.Count} ? LIMIT {i.Count} >>
+                   """);
 
     private readonly DbConnection _connection = Helper.CreateSchemaAndData();
 
