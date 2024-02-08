@@ -1,5 +1,6 @@
 namespace DynamicSQL;
 
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Threading;
@@ -17,4 +18,6 @@ public static class AdoNetExtensions
         await connection.OpenAsync(cancellationToken);
         return true;
     }
+
+    public static IAsyncEnumerable<T> ToAsyncEnumerable<T>(this DbDataReader reader) => new OutputEnumerable<T>(reader);
 }

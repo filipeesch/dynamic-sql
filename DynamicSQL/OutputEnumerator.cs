@@ -6,24 +6,27 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-public static class OutputReader<T>
+internal class OutputEnumerator<T>(DbDataReader reader, CancellationToken cancellationToken) : IAsyncEnumerator<T>
 {
     private static readonly ConcurrentDictionary<string, Func<DbDataReader, T>> CompiledReaders = new();
+    private readonly Func<DbDataReader, T> _readFunc = GetReadFunc(reader);
 
+    public T Current => _readFunc(reader);
 
-    public static Func<DbDataReader, T> GetReaderFunc(DbDataReader reader)
+    public ValueTask DisposeAsync() => new();
+
+    public async ValueTask<bool> MoveNextAsync() => await reader.ReadAsync(cancellationToken);
+
+    private static Func<DbDataReader, T> GetReadFunc(DbDataReader reader)
     {
         var columns = Enumerable
             .Range(0, reader.FieldCount)
-            .Select((i,c)=> new Column(i, reader.GetName(i)))
+            .Select(i => new Column(i, reader.GetName(i)))
             .ToList();
 
-        return GetReadFunc(columns);
-    }
-
-    private static Func<DbDataReader, T> GetReadFunc(IReadOnlyList<Column> columns)
-    {
         var readerKey = GetCompiledReaderKey(columns);
 
         if (CompiledReaders.TryGetValue(readerKey, out var readFunc))
@@ -109,10 +112,16 @@ public static class OutputReader<T>
 
     private static string GetCompiledReaderKey(IEnumerable<Column> columns) => string.Join(",", columns.Select(x => x.Name));
 
-    private class Column(int index, string name)
+    private class Column
     {
-        public int Index { get; } = index;
+        public Column(int index, string name)
+        {
+            Index = index;
+            Name = name;
+        }
 
-        public string Name { get; } = name;
+        public int Index { get; }
+
+        public string Name { get; }
     }
 }

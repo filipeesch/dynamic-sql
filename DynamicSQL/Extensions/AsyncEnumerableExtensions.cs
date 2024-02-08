@@ -22,4 +22,18 @@ public static class AsyncEnumerableExtensions
 
         return result;
     }
+
+    public static async Task<T?> FirstOrDefaultAsync<T>(
+        this IAsyncEnumerable<T> enumerable,
+        CancellationToken cancellationToken = default)
+    {
+        await using var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
+
+        if (await enumerator.MoveNextAsync())
+        {
+            return enumerator.Current;
+        }
+
+        return default;
+    }
 }

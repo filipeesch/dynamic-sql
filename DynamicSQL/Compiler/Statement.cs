@@ -49,6 +49,15 @@ public class Statement<TInput>
             .ToListAsync(cancellationToken, predictedListSize);
     }
 
+    public async Task<TOutput?> QuerySingleAsync<TOutput>(
+        DbConnection connection,
+        TInput input,
+        CancellationToken cancellationToken = default)
+    {
+        return await QueryAsyncEnumerable<TOutput>(connection, input, cancellationToken)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
     public async IAsyncEnumerable<TOutput> QueryAsyncEnumerable<TOutput>(
         DbConnection connection,
         TInput input,
@@ -64,44 +73,10 @@ public class Statement<TInput>
         {
             using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleResult, cancellationToken);
 
-            var readFunc = OutputReader<TOutput>.GetReaderFunc(reader);
-
-            while (await reader.ReadAsync(cancellationToken))
+            await foreach (var item in reader.ToAsyncEnumerable<TOutput>().WithCancellation(cancellationToken))
             {
-                yield return readFunc(reader);
+                yield return item;
             }
-        }
-        finally
-        {
-            if (wasClosed)
-            {
-                connection.Close();
-            }
-        }
-    }
-
-    public async Task<TOutput?> QuerySingleAsync<TOutput>(
-        DbConnection connection,
-        TInput input,
-        CancellationToken cancellationToken = default)
-    {
-        using var command = connection.CreateCommand();
-
-        Render(input, command);
-
-        var wasClosed = await connection.TryOpenConnectionAsync(cancellationToken);
-
-        try
-        {
-            using var reader = await command.ExecuteReaderAsync(
-                CommandBehavior.SingleResult | CommandBehavior.SingleRow,
-                cancellationToken);
-
-            var readFunc = OutputReader<TOutput>.GetReaderFunc(reader);
-
-            return await reader.ReadAsync(cancellationToken) ?
-                readFunc(reader) :
-                default;
         }
         finally
         {
