@@ -39,14 +39,41 @@ public class Statement<TInput>
         command.CommandText = builder.ToString();
     }
 
-    public Task<List<TOutput>> QueryListAsync<TOutput>(
+    public async Task<List<TOutput>> QueryListAsync<TOutput>(
         DbConnection connection,
         TInput input,
         CancellationToken cancellationToken = default,
         int? predictedListSize = null)
     {
-        return QueryAsyncEnumerable<TOutput>(connection, input, cancellationToken)
-            .ToListAsync(cancellationToken, predictedListSize);
+        using var command = connection.CreateCommand();
+
+        Render(input, command);
+
+        var wasClosed = await connection.TryOpenConnectionAsync(cancellationToken);
+
+        var result = predictedListSize.HasValue
+            ? new List<TOutput>(predictedListSize.Value)
+            : new List<TOutput>();
+
+        try
+        {
+            using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleResult, cancellationToken);
+            var outputReader = new OutputReader<TOutput>(reader);
+
+            while (await outputReader.MoveNextAsync(cancellationToken))
+            {
+                result.Add(outputReader.Read());
+            }
+        }
+        finally
+        {
+            if (wasClosed)
+            {
+                connection.Close();
+            }
+        }
+
+        return result;
     }
 
     public async Task<TOutput?> QuerySingleAsync<TOutput>(
@@ -54,8 +81,31 @@ public class Statement<TInput>
         TInput input,
         CancellationToken cancellationToken = default)
     {
-        return await QueryAsyncEnumerable<TOutput>(connection, input, cancellationToken)
-            .FirstOrDefaultAsync(cancellationToken);
+        using var command = connection.CreateCommand();
+
+        Render(input, command);
+
+        var wasClosed = await connection.TryOpenConnectionAsync(cancellationToken);
+
+        try
+        {
+            using var reader = await command.ExecuteReaderAsync(
+                CommandBehavior.SingleResult | CommandBehavior.SingleRow,
+                cancellationToken);
+
+            var outputReader = new OutputReader<TOutput>(reader);
+
+            return await outputReader.MoveNextAsync(cancellationToken)
+                ? outputReader.Read()
+                : default;
+        }
+        finally
+        {
+            if (wasClosed)
+            {
+                connection.Close();
+            }
+        }
     }
 
     public async IAsyncEnumerable<TOutput> QueryAsyncEnumerable<TOutput>(
@@ -72,10 +122,11 @@ public class Statement<TInput>
         try
         {
             using var reader = await command.ExecuteReaderAsync(CommandBehavior.SingleResult, cancellationToken);
+            var outputReader = new OutputReader<TOutput>(reader);
 
-            await foreach (var item in reader.ToAsyncEnumerable<TOutput>().WithCancellation(cancellationToken))
+            while (await outputReader.MoveNextAsync(cancellationToken))
             {
-                yield return item;
+                yield return outputReader.Read();
             }
         }
         finally

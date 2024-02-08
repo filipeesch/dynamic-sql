@@ -6,10 +6,13 @@ using BenchmarkDotNet.Attributes;
 using Dapper;
 using DynamicSQL.Compiler;
 
-[ShortRunJob]
+//[ShortRunJob]
 [MemoryDiagnoser]
 public class BenchmarkClass
 {
+    private static readonly Statement<int> SelectAll = StatementCompiler.Compile<int>(
+        (i, c) => $"SELECT Id, Name, BirthDate FROM Person");
+
     private static readonly Statement<SelectAllQueryInput> SelectAllWithLimit = StatementCompiler.Compile<SelectAllQueryInput>(
         (i, c) => $"SELECT Id, Name, BirthDate FROM Person LIMIT {i.Count}");
 
@@ -32,7 +35,7 @@ public class BenchmarkClass
 
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_1_Item()
+    public async Task DynamicSQL_QueryList_1_Item()
     {
         var input = new SelectAllQueryInput(1);
 
@@ -40,7 +43,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_1_Item_Predicted()
+    public async Task DynamicSQL_QueryList_1_Item_Predicted()
     {
         var input = new SelectAllQueryInput(1);
 
@@ -48,7 +51,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task Dapper_SelectAll_1_Item()
+    public async Task Dapper_QueryList_1_Item()
     {
         var input = new SelectAllQueryInput(1);
 
@@ -58,7 +61,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_10_Items()
+    public async Task DynamicSQL_QueryList_10_Items()
     {
         var input = new SelectAllQueryInput(10);
 
@@ -66,7 +69,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_10_Item_Predicted()
+    public async Task DynamicSQL_QueryList_10_Items_Predicted()
     {
         var input = new SelectAllQueryInput(10);
 
@@ -74,7 +77,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task Dapper_SelectAll_10_Items()
+    public async Task Dapper_QueryList_10_Items()
     {
         var input = new SelectAllQueryInput(10);
 
@@ -84,7 +87,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_100_Items()
+    public async Task DynamicSQL_QueryList_100_Items()
     {
         var input = new SelectAllQueryInput(100);
 
@@ -92,7 +95,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_100_Item_Predicted()
+    public async Task DynamicSQL_QueryList_100_Items_Predicted()
     {
         var input = new SelectAllQueryInput(100);
 
@@ -100,7 +103,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task Dapper_SelectAll_100_Items()
+    public async Task Dapper_QueryList_100_Items()
     {
         var input = new SelectAllQueryInput(100);
 
@@ -110,7 +113,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_1000_Items()
+    public async Task DynamicSQL_QueryList_1000_Items()
     {
         var input = new SelectAllQueryInput(1000);
 
@@ -118,7 +121,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task DynamicSQL_SelectAll_1000_Item_Predicted()
+    public async Task DynamicSQL_QueryList_1000_Items_Predicted()
     {
         var input = new SelectAllQueryInput(1000);
 
@@ -126,7 +129,7 @@ public class BenchmarkClass
     }
 
     [Benchmark]
-    public async Task Dapper_SelectAll_1000_Items()
+    public async Task Dapper_QueryList_1000_Items()
     {
         var input = new SelectAllQueryInput(1000);
 
