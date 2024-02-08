@@ -1,16 +1,29 @@
 ## Introduction
-SQL is a powerful and flexible language for querying and updating data. However, generating dynamic SQL can be cumbersome, involving complex logic, string concatenation, and creating `DbParameter` instances. While there are libraries to facilitate SQL creation using C#, they often fall short in handling complex queries, leading to convoluted C# code. This project introduces a new approach to simplify, empower, and maintain dynamic SQL generation.
+SQL is a powerful and flexible language for querying and updating data. However, generating dynamic SQL can be cumbersome, involving complex logic, string concatenation, and creating `DbParameter` instances. While there are libraries to facilitate SQL creation using C#, they often fall short in handling complex queries, leading to convoluted C# code. This project introduces a new approach to simplify and maintain dynamic SQL generation.
 
 ## Usage
-The library leverages `<< >>` tags combined with string interpolation and custom operators to construct the final SQL string. The interpolated string is interpreted and compiled to native code, to provide the best performance in runtime.
+The library leverages `<< >>` tags combined with string interpolation and custom operators to construct the final SQL command. The interpolated string is interpreted and compiled to native code, to provide the best performance in runtime.
 
-### Conditional Rendering
-The syntax `<<condition ? truePart : falsePart>>` acts as an IF statement for conditional rendering. The false part is optional. Conditions can be boolean, nullable, or list types, with 'true' interpreted as a boolean true, a non-null nullable type, or a non-empty list. Nested conditions are supported.
+## Key Features
 
-### Automatic Parameters
-String interpolation placeholders are automatically converted into SQL parameters, avoiding any kind of SQL injection. Lists used with the `IN` SQL operator are transformed into multiple SQL parameters.
+- **Simplified SQL Generation**: Streamlines the creation of complex SQL queries using minimal code, which helps reduce the likelihood of errors and improves code maintainability.
 
-#### Example:
+- **Conditional Rendering**: Employs intuitive syntax (`<<condition ? truePart : falsePart>>`) for conditional inclusion of SQL segments. This allows queries to dynamically adapt based on runtime conditions.
+
+- **Automatic Parameters**: Automatically converts string interpolation placeholders into SQL parameters, mitigating SQL injection risks. This feature is particularly useful for list types with the `IN` SQL operator, as it transforms them into multiple parameters seamlessly.
+
+- **Nested Conditions**: Facilitates the construction of sophisticated SQL queries with support for nested conditional statements, enabling complex logic to be expressed cleanly and concisely within SQL strings.
+
+- **Segment Rendering**: Provides the ability to dynamically render specific SQL segments with custom logic, offering flexibility in query construction. This allows for the injection of custom SQL snippets and parameters into queries based on application requirements.
+
+- **Performance Optimized**: The statements and parsers are compiled into native code, which is then cached for future executions. No reflection is used in the hot path. This ensures high performance for query executions.
+
+- **Type-Safe Parsing**: Parses query results directly into .NET classes or records
+
+## Documentation
+See the [documentation page](https://filipeesch.github.io/dynamic-sql/) for more details.
+
+## Sample Usage
 ```csharp
 private static readonly CompiledStatement<QueryInput> Statement = StatementCompiler.Compile<QueryInput>(
     i =>
@@ -45,9 +58,3 @@ FROM Person p
 WHERE 1=1
     AND p.Id IN (@p4_0, @p4_1, @p4_2, @p4_3)
 ```
-
-## Future Enhancements
-- Loop rendering support
-- Better syntax error messages 
-- Adding support for table-valued parameters.
-- Extending compatibility with different SQL databases like Postgres, MySQL, and Oracle.
