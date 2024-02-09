@@ -23,6 +23,12 @@ The library leverages `<< >>` tags combined with string interpolation and custom
 ## Documentation
 See the [documentation page](https://filipeesch.github.io/dynamic-sql/) for more details.
 
+## How to install
+
+```
+dotnet add package DynamicSQL
+```
+
 ## Sample Usage
 ```csharp
 private static readonly CompiledStatement<QueryInput> Statement = StatementCompiler.Compile<QueryInput>(
